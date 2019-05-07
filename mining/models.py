@@ -13,4 +13,4 @@ class Trade(models.Model):
     time_stamp = UnixTimeStampField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
     business = models.IntegerField()
-    total_trades = models.IntegerField()
+    tot_ctrcts_papers = models.IntegerField()
