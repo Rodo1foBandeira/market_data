@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from mining.models import Trade, Active
-import urllib.request, json, datetime, pytz
+import urllib.request, json, datetime, 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
@@ -19,14 +19,12 @@ class Command(BaseCommand):
                     trade.id = None
                     trade.active = Active.objects.get(id=1)
                     datetime_buss = data['Value'][0]['UT']
-                    trade.datetime_buss = datetime.datetime(int(datetime_buss[0:4]), int(datetime_buss[5:7]), int(datetime_buss[8:10]), int(datetime_buss[11:13]), int(datetime_buss[14:16]), int(datetime_buss[17:19]), int(datetime_buss[20:24]), tzinfo=pytz.UTC)
+                    # 2019-05-07T18:01:23.932
+                    trade.datetime_buss = datetime.datetime(int(datetime_buss[0:4]), int(datetime_buss[5:7]), int(datetime_buss[8:10]), int(datetime_buss[11:13]), int(datetime_buss[14:16]), int(datetime_buss[17:19]), int(datetime_buss[20:24]), tzinfo=-3)
                     trade.price = price
                     trade.business = business
                     trade.tot_ctrcts_papers = tot_ctrcts_papers
                     trade.save()
-                    print('Preco: ' + data['Value'][0]['Ps']['P'])
-                    print('Negocios: ' + data['Value'][0]['Ps']['TC'])
-                    print('Contratos: ' + data['Value'][0]['Ps']['TT'])
 
         except urllib.error.URLError as e:
             print(e.reason)
