@@ -3,6 +3,7 @@ from mining.models import Trade, Active
 import urllib.request, json, datetime, pytz
 
 class Command(BaseCommand):
+    trade = {}
     trade['WINM19'] = Trade()
     trade['WDOM19'] = Trade()
     trade['WINM19'].active = Active.objects.get(id=1)
@@ -30,7 +31,7 @@ class Command(BaseCommand):
             self.trade[response['S']].id = None
             datetime_buss = response['UT']
             self.trade[response['S']].datetime_buss = datetime.datetime(int(datetime_buss[0:4]), int(datetime_buss[5:7]), int(datetime_buss[8:10]), int(datetime_buss[11:13]), int(datetime_buss[14:16]), int(datetime_buss[17:19]), int(datetime_buss[20:24]), tzinfo=pytz.UTC)
-            self.trade[response['S']].price = self.price
-            self.trade[response['S']].business = self.business
-            self.trade[response['S']].tot_ctrcts_papers = self.tot_ctrcts_papers
+            self.trade[response['S']].price = price
+            self.trade[response['S']].business = business
+            self.trade[response['S']].tot_ctrcts_papers = tot_ctrcts_papers
             self.trade[response['S']].save()
