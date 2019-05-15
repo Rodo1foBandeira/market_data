@@ -1,16 +1,43 @@
 from django.core.management.base import BaseCommand, CommandError
 from mining.models import Trade, Active
 import urllib.request, json, datetime, pytz
+from datetime import date
 
 class Command(BaseCommand):
+    meses = (
+    'F', # Jan
+    'G', # Fev
+    'H', # Mar
+    'J', # Abr
+    'K', # Mai
+    'M', # Jun
+    'N', # Jul
+    'Q', # Ago
+    'U', # Set
+    'V', # Out
+    'X', # Nov
+    'Z'  # Dez
+    )
+
+    hoje = date.today()
+
+    if  (hoje.month % 2 > 0):
+        winfut = 'WIN' + meses[hoje.month] + str(hoje.year)[2:4]
+    elif (hoje.weekday() >= 2 and (hoje.day + 5-hoje.weekday() >= 15)):
+        winfut = 'WIN' + meses[hoje.month+1] + str(hoje.year)[2:4]
+    else:
+        winfut = 'WIN' + meses[hoje.month-1] + str(hoje.year)[2:4]
+
+    wdofut = 'WDO' + meses[hoje.month] + str(hoje.year)[2:4]
+
     trade = {}
-    trade['WINM19'] = Trade()
-    trade['WDOM19'] = Trade()
-    trade['WINM19'].active = Active.objects.get(id=1)
-    trade['WDOM19'].active = Active.objects.get(id=2)
+    trade[winfut] = Trade()
+    trade[wdofut] = Trade()
+    trade[winfut].active = Active.objects.get(id=1)
+    trade[wdofut].active = Active.objects.get(id=2)
 
     def handle(self, *args, **options):
-        url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q=WINM19|WDOM19"
+        url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q="+winfut+"|"+wdofut
         req = urllib.request.Request(url)
         
         while(True):
