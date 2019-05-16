@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from mining.models import Trade, Active
-import urllib.request, json, datetime, pytz
-from datetime import date
+import urllib.request, json, pytz
+from datetime import date, datetime
 
 class Command(BaseCommand):
     meses = (
@@ -37,7 +37,7 @@ class Command(BaseCommand):
     trade[wdofut].active = Active.objects.get(id=2)
 
     def handle(self, *args, **options):
-        url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q="+winfut+"|"+wdofut
+        url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q="+self.winfut+"|"+self.wdofut
         req = urllib.request.Request(url)
         
         while(True):
@@ -57,7 +57,7 @@ class Command(BaseCommand):
         if self.trade[response['S']].price != price or self.trade[response['S']].business != business or self.trade[response['S']].tot_ctrcts_papers != tot_ctrcts_papers:
             self.trade[response['S']].id = None
             datetime_buss = response['UT']
-            self.trade[response['S']].datetime_buss = datetime.datetime(int(datetime_buss[0:4]), int(datetime_buss[5:7]), int(datetime_buss[8:10]), int(datetime_buss[11:13]), int(datetime_buss[14:16]), int(datetime_buss[17:19]), int(datetime_buss[20:24]), tzinfo=pytz.UTC)
+            self.trade[response['S']].datetime_buss = datetime(int(datetime_buss[0:4]), int(datetime_buss[5:7]), int(datetime_buss[8:10]), int(datetime_buss[11:13]), int(datetime_buss[14:16]), int(datetime_buss[17:19]), int(datetime_buss[20:24]), tzinfo=pytz.UTC)
             self.trade[response['S']].price = price
             self.trade[response['S']].business = business
             self.trade[response['S']].tot_ctrcts_papers = tot_ctrcts_papers
