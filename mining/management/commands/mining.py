@@ -31,10 +31,11 @@ class Command(BaseCommand):
     wdofut = 'WDO' + meses[hoje.month] + str(hoje.year)[2:4]
 
     trade = {}
-    trade[winfut] = Trade.objects.filter(active_id=1).order_by('-id')[:1]
+    trade[winfut] = Trade.objects.filter(active_id=1).order_by('-id')[0]
     trade[winfut].active = Active.objects.get(id=1)
 
-    trade[wdofut] = Trade.objects.filter(active_id=2).order_by('-id')[:1]
+
+    trade[wdofut] = Trade.objects.filter(active_id=2).order_by('-id')[0]
     trade[wdofut].active = Active.objects.get(id=2)
 
     def handle(self, *args, **options):
@@ -53,16 +54,19 @@ class Command(BaseCommand):
     def save(self, response):
 
         for item in response['Ts']:
-            item['DT'] = self.toDate(item['DT'])
+            item['DT'] = datetime.strptime(item['DT'], '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=pytz.UTC)
             item['Br'] = int(item['Br'])
             item['Sr'] = int(item['Sr'])
             item['Q'] = int(item['Q'])
             item['P'] = float(item['P'])
             
-        response['Ps']['P'] = float(response['Ps']['P'])
+        #response['Ps']['P'] = float(response['Ps']['P'])
         response['Ps']['TC'] = int(response['Ps']['TC'])
         response['Ps']['TT'] = int(response['Ps']['TT'])
 
+        # nao existe possibilidade de duplicidade
+        # novos: existe possibilidade de perder informaçao entre requisiçoes, pois pode haver um novo negocio identico,
+        # mas temos os totalizadores, e o mais importante é pegar as variações do preco
         novos = filter(lambda x: (x['DT'] >= self.trade[response['S']].datetime_buss and (x['Br'] != self.trade[response['S']].buyer or x['Sr'] != self.trade[response['S']].seller or x['Q'] != self.trade[response['S']].qtd or x['P'] != self.trade[response['S']].price)), response['Ts'])
         for item in sorted(novos, key=lambda x: x['DT']):        
             self.trade[response['S']].id = None
@@ -74,6 +78,3 @@ class Command(BaseCommand):
             self.trade[response['S']].tot_qtd = response['Ps']['TT']
             self.trade[response['S']].tot_buss = response['Ps']['TC']
             self.trade[response['S']].save()
-        
-    def toDate(self, dtStr):
-        return datetime(int(dtStr[0:4]), int(dtStr[5:7]), int(dtStr[8:10]), int(dtStr[11:13]), int(dtStr[14:16]), int(dtStr[17:19]), int(dtStr[20:24]), tzinfo=pytz.UTC)
