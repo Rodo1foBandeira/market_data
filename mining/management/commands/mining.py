@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from mining.models import Trade, Active
+from mining.models import Trade
 import urllib.request, json, pytz
 from datetime import date, datetime
 
@@ -31,25 +31,24 @@ class Command(BaseCommand):
     wdofut = 'WDO' + meses[hoje.month] + str(hoje.year)[2:4]
 
     trade = {}
-    trade[winfut] = Trade.objects.filter(active_id=1).order_by('-id')[0]
-    trade[winfut].active = Active.objects.get(id=1)
+    trade[winfut] = Trade.objects.filter(active__startswith='WIN').order_by('-id')[0]
 
-
-    trade[wdofut] = Trade.objects.filter(active_id=2).order_by('-id')[0]
-    trade[wdofut].active = Active.objects.get(id=2)
+    trade[wdofut] = Trade.objects.filter(active__startswith='WDO').order_by('-id')[0]
 
     def handle(self, *args, **options):
         url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q="+self.winfut+"|"+self.wdofut
         req = urllib.request.Request(url)
         
-        while(True):
-            try:
-                with urllib.request.urlopen(req) as resp:
-                    data = json.loads(resp.read().decode())
-                    self.save(data['Value'][0])
-                    self.save(data['Value'][1])
-            except urllib.error.URLError as e:
-                print(e.reason)
+        #while(True):
+        try:
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read().decode())
+                self.save(data['Value'][0])
+                self.save(data['Value'][1])
+        except urllib.error.URLError as e:
+            print(e.reason)
+
+    
 
     def save(self, response):
 
@@ -66,15 +65,24 @@ class Command(BaseCommand):
 
         # nao existe possibilidade de duplicidade
         # novos: existe possibilidade de perder informaçao entre requisiçoes, pois pode haver um novo negocio identico,
-        # mas temos os totalizadores, e o mais importante é pegar as variações do preco
-        novos = filter(lambda x: (x['DT'] >= self.trade[response['S']].datetime_buss and (x['Br'] != self.trade[response['S']].buyer or x['Sr'] != self.trade[response['S']].seller or x['Q'] != self.trade[response['S']].qtd or x['P'] != self.trade[response['S']].price)), response['Ts'])
-        for item in sorted(novos, key=lambda x: x['DT']):        
-            self.trade[response['S']].id = None
-            self.trade[response['S']].datetime_buss = item['DT']
-            self.trade[response['S']].buyer = item['Br']
-            self.trade[response['S']].seller = item['Sr']
-            self.trade[response['S']].price = item['P']
-            self.trade[response['S']].qtd = item['Q']
-            self.trade[response['S']].tot_qtd = response['Ps']['TT']
-            self.trade[response['S']].tot_buss = response['Ps']['TC']
-            self.trade[response['S']].save()
+        # mas temos os totalizadores, e o mais importante é pegar as variações do preco        
+        novos_decrescente = sorted(
+            filter(
+                lambda item: 
+                    item['DT'] >= self.trade[response['S']].datetime_buss
+                    and (item['Br'] != self.trade[response['S']].buyer 
+                    or item['Sr'] != self.trade[response['S']].seller 
+                    or item['Q'] != self.trade[response['S']].qtd 
+                    or item['P'] != self.trade[response['S']].price),
+                response['Ts']
+            ),
+            key=lambda x: x['DT']
+        )
+
+        Trade.objects.bulk_create(
+            map(
+                lambda item:
+                    Trade(active=response['S'], datetime_buss=item['DT'], buyer = item['Br'], seller = item['Sr'], price = item['P'], qtd = item['Q'], tot_qtd = response['Ps']['TT'], tot_buss = response['Ps']['TC']),
+                novos_decrescente
+            )
+        )
