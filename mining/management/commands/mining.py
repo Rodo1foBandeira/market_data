@@ -39,14 +39,14 @@ class Command(BaseCommand):
         url = "https://mdgateway04.easynvest.com.br/iwg/snapshot/?t=webgateway&c=5448062&q="+self.winfut+"|"+self.wdofut
         req = urllib.request.Request(url)
         
-        #while(True):
-        try:
-            with urllib.request.urlopen(req) as resp:
-                data = json.loads(resp.read().decode())
-                self.save(data['Value'][0])
-                self.save(data['Value'][1])
-        except urllib.error.URLError as e:
-            print(e.reason)
+        while(True):
+            try:
+                with urllib.request.urlopen(req) as resp:
+                    data = json.loads(resp.read().decode())
+                    self.save(data['Value'][0])
+                    self.save(data['Value'][1])
+            except urllib.error.URLError as e:
+                print(e.reason)
 
     
 
@@ -86,3 +86,9 @@ class Command(BaseCommand):
                 novos_decrescente
             )
         )
+
+        self.trade[response['S']].datetime_buss = novos_decrescente[-1]['DT']
+        self.trade[response['S']].buyer = novos_decrescente[-1]['Br']
+        self.trade[response['S']].seller = novos_decrescente[-1]['Sr']
+        self.trade[response['S']].price = novos_decrescente[-1]['P']
+        self.trade[response['S']].qtd = novos_decrescente[-1]['Q']
