@@ -51,7 +51,8 @@ class Command(BaseCommand):
                         for item in data['Value']:                            
                             self.save(item)
                             status_m.append(item['STSD'])
-                        if (len(list(filter(lambda x: x == 'open', status_m))) == 0) # Tratamento para feriados
+                        #Tratamento de mercado fechado
+                        if (len(list(filter(lambda x: x == 'open', status_m))) == 0):
                             time.sleep(3)
                 except urllib.error.URLError as e:
                     print(e.reason)
