@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
     if  (hoje.month % 2 > 0):
         winfut = 'WIN' + meses[hoje.month] + str(hoje.year)[2:4]
-    elif (hoje.weekday() >= 2 and (hoje.day + 5-hoje.weekday() >= 15)):
+    elif (hoje.weekday() >= 2 and (hoje.day + 5-hoje.weekday() >= 15) or (hoje.day > 15)):
         winfut = 'WIN' + meses[hoje.month+1] + str(hoje.year)[2:4]
     else:
         winfut = 'WIN' + meses[hoje.month-1] + str(hoje.year)[2:4]
