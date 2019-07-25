@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from mining.models import Trade
-import urllib.request, json, pytz
+import urllib.request, json, pytz, time
 from datetime import date, datetime
 
 class Command(BaseCommand):
@@ -47,8 +47,12 @@ class Command(BaseCommand):
                 try:
                     with urllib.request.urlopen(req) as resp:
                         data = json.loads(resp.read().decode())
-                        for item in data['Value']:
+                        status_m = []
+                        for item in data['Value']:                            
                             self.save(item)
+                            status_m.append(item['STSD'])
+                        if (len(list(filter(lambda x: x == 'open', status_m))) == 0) # Tratamento para feriados
+                            time.sleep(3)
                 except urllib.error.URLError as e:
                     print(e.reason)
         else:
