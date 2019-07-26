@@ -50,7 +50,7 @@ class Command(BaseCommand):
                         status_m = []
                         for item in data['Value']:                            
                             self.save(item)
-                            status_m.append(item['STSD'])
+                            status_m.append(item['Ps']['STSD'])
                         #Tratamento de mercado fechado
                         if (len(list(filter(lambda x: x == 'open', status_m))) == 0):
                             time.sleep(3)
