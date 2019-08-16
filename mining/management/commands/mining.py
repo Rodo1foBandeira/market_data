@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from mining.models import Trade
-import urllib.request, json, pytz
+import urllib.request, json, pytz, time
 from datetime import date, datetime
 
 class Command(BaseCommand):
@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
     if  (hoje.month % 2 > 0):
         winfut = 'WIN' + meses[hoje.month] + str(hoje.year)[2:4]
-    elif (hoje.weekday() >= 2 and (hoje.day + 5-hoje.weekday() >= 15)):
+    elif (hoje.weekday() >= 2 and (hoje.day + 5-hoje.weekday() >= 15) or (hoje.day > 15)):
         winfut = 'WIN' + meses[hoje.month+1] + str(hoje.year)[2:4]
     else:
         winfut = 'WIN' + meses[hoje.month-1] + str(hoje.year)[2:4]
@@ -47,8 +47,13 @@ class Command(BaseCommand):
                 try:
                     with urllib.request.urlopen(req) as resp:
                         data = json.loads(resp.read().decode())
-                        for item in data['Value']:
+                        status_m = []
+                        for item in data['Value']:                            
                             self.save(item)
+                            status_m.append(item['Ps']['STSD'])
+                        #Tratamento de mercado fechado
+                        if (len(list(filter(lambda x: x == 'open', status_m))) == 0):
+                            time.sleep(3)
                 except urllib.error.URLError as e:
                     print(e.reason)
         else:
