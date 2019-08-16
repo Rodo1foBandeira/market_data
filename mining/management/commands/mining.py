@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 filter(
                     lambda item:
                         self.trade[response['S']] == None
-                        or (item['DT'] >= self.trade[response['S']].datetime_buss
+                        or (item['DT'] > self.trade[response['S']].datetime_buss
                         and (item['Br'] != self.trade[response['S']].buyer 
                         or item['Sr'] != self.trade[response['S']].seller 
                         or item['Q'] != self.trade[response['S']].qtd 
